@@ -4,7 +4,7 @@ Digital patient records (basic info, medical history, allergies, prescriptions).
 
 Searchable patient profiles.
 
-Appointment Scheduling
+Appointment Scheduling(--)
 
 Calendar view for doctors and staff.
 
@@ -16,7 +16,7 @@ Billing & Payments
 
 Automated bill generation.
 
-Insurance claims management.
+//Insurance claims management.
 
 Integration with payment gateways (UPI, cards, etc.).
 
