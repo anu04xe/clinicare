@@ -17,7 +17,13 @@ class DashboardScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(AppConstants.appName, style: textTheme.headlineMedium),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(AppConstants.appName, style: textTheme.headlineMedium),
+                  const Icon(Icons.clinic, size: 32),
+                ],
+              ),
               const SizedBox(height: 12),
               Text(
                 'Patient registration, visits, and prescriptions will be added here.',
