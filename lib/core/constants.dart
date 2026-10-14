@@ -1,4 +1,4 @@
 abstract final class AppConstants {
   static const appName = 'Clinicare';
-  static const dashboardTitle = 'Home';
+  static const dashboardTitle = 'Clinic Front Desk';
 }
