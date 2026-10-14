@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:clinicare/features/patients/patient_repository.dart';
+
+import 'package:clinicare/app/router.dart';
 import 'package:clinicare/database/database.dart';
+import 'package:clinicare/features/patients/patient_repository.dart';
 
 class PatientListScreen extends StatefulWidget {
   final PatientRepository repository;
@@ -22,9 +24,16 @@ class _PatientListScreenState extends State<PatientListScreen> {
     _loadPatients();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadPatients() async {
     setState(() => _isLoading = true);
     final results = await widget.repository.getAllPatients();
+    if (!mounted) return;
     setState(() {
       _patients = results;
       _isLoading = false;
@@ -32,15 +41,23 @@ class _PatientListScreenState extends State<PatientListScreen> {
   }
 
   Future<void> _search(String query) async {
-    if (query.isEmpty) {
+    if (query.trim().isEmpty) {
       await _loadPatients();
       return;
     }
-    final results = await widget.repository.searchPatients(query);
+
+    setState(() => _isLoading = true);
+    final results = await widget.repository.searchPatients(query.trim());
+    if (!mounted) return;
     setState(() {
       _patients = results;
       _isLoading = false;
     });
+  }
+
+  Future<void> _openAddPatient() async {
+    await Navigator.pushNamed(context, AppRoutes.patientsAdd);
+    await _loadPatients();
   }
 
   @override
@@ -48,58 +65,66 @@ class _PatientListScreenState extends State<PatientListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Patients'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search by name, phone or ID...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 960),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      hintText: 'Search by name, phone, or patient ID',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: _search,
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _patients.isEmpty
+                        ? const Center(child: Text('No patients found'))
+                        : ListView.separated(
+                            itemCount: _patients.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              final patient = _patients[index];
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                title: Text(
+                                  patient.fullName,
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                subtitle: Text(
+                                  '${patient.phoneNumber ?? 'No phone'} • ID: ${patient.id}',
+                                ),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.patientDetails(patient.id),
+                                    arguments: patient,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
-              onChanged: _search,
             ),
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _patients.isEmpty
-          ? const Center(child: Text('No patients found'))
-          : ListView.builder(
-              itemCount: _patients.length,
-              itemBuilder: (context, index) {
-                final patient = _patients[index];
-                return ListTile(
-                  title: Text(
-                    patient.fullName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '${patient.phoneNumber ?? 'No phone'} • ID: ${patient.id}',
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/patients/${patient.id}',
-                      arguments: patient,
-                    );
-                  },
-                );
-              },
-            ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pushNamed(context, '/patients/add');
-        },
+        onPressed: _openAddPatient,
         label: const Text('Add Patient'),
         icon: const Icon(Icons.add),
       ),
