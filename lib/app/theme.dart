@@ -58,7 +58,7 @@ abstract final class AppTheme {
         backgroundColor: _surface,
         foregroundColor: _textPrimary,
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: _surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
